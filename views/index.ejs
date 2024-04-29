@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link href='https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css' rel='stylesheet' />
+</head>
+
+<body>
+  <div id="myModal" class="modal">
+    <!-- Modal content -->
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <form id="findUser" action="/findUser" method="post">
+        <input id="userDetail" type="text" name="username" placeholder="Enter username of other user">
+        <input type="submit">
+      </form>
+    </div>
+
+  </div>
+
+  <div id="main">
+    <div id="left">
+      <div class="nav">
+        <div class="user">
+          <img src="<%= user.pic %>" alt="">
+          <h2><%= user.username %></h2>
+        </div>
+
+        <i id="myBtn" class="ri-add-line"></i>
+
+      </div>
+      <div class="chats">
+        <div class="title">
+          You chats
+        </div>
+        <% user.chats.forEach(chat=>{ %>
+        <div class="chat" onclick="openChat('<%= chat.username %>','<%= chat.pic %>')">
+          <img src="<%= chat.pic %>" alt="">
+          <div class="text">
+            <h2><%= chat.username %></h2>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+    <div id="right">
+
+    </div>
+
+  </div>
+
+  <script src="/javascripts/index.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js" integrity="sha512-uMtXmF28A2Ab/JJO2t/vYhlaa/3ahUOgj1Zf27M5rOo8/+fcTUVH0/E0ll68njmjrLqOBjXM3V9NiPFL5ywWPQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    var username = '<%= user.username %>'
+    var socket = io();
+    socket.emit('newUserConnected', {
+      user: username
+    })
+
+    function newmsg() {
+      var msgField = document.querySelector('#newmsg')
+      var currentMessage = {
+        data: msgField.value,
+        fromUser: username,
+        toUser: currentOppositeUser,
+      }
+      addMessage(currentMessage)
+      socket.emit('newmsg', currentMessage)
+      msgField.value = ''
+    }
+    socket.on('newmsg', msg => {
+      console.log(msg)
+      if (msg.fromUser == currentOppositeUser) {
+        addMessage(msg)
+      } else {
+        if (msg.isNewChat)
+          addChat(msg.fromUser, msg.fromUserPic)
+      }
+    })
+
+    function addMessage(message) {
+      let msg
+      if (message.fromUser === username) {
+        msg = `<div class="conver outgoing">
+       <div class="msg">${message.data}</div>
+     </div>`
+      } else {
+        msg = `<div class="conver incoming">
+       <div class="msg">${message.data}</div>
+     </div>`
+      }
+
+      document.querySelector('.conversation').innerHTML += msg
+      // conversation.scrollTop = conversation.scrollHeight;
+     
+    }
+  </script>
+</body>
+
+</html>
